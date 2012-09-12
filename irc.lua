@@ -60,6 +60,7 @@ local tabs
 local ctab=1
 local edit=""
 local cpos=0
+local cursorbl=0
 
 local wx,wy=10,10
 local wcolor={255,255,0}
@@ -107,7 +108,8 @@ tpt.drawrect(wx,wy,600,360,unpack(wcolor))
  for i=1,math.min(#tabs[ctab].text,32) do
   drawtext(wx+2,wy+348-i*10,tabs[ctab].text[i],unpack(textcolor))
  end
- drawtext(wx+2,wy+351,edit,unpack(textcolor))
+ drawtext(wx+2,wy+351,edit:sub(1,cpos)..(math.floor(cursorbl/16)%2==1 and ".." or "_")..edit:sub(cpos+1,#edit),unpack(textcolor))
+ cursorbl=cursorbl+1
 end
 
 local function isinrect(x,y,xz,yz,w,h)
@@ -363,11 +365,18 @@ end
 local function key(a,b,c,d)
  if d==1 then
   if b>31 and b<127 then
-   edit=edit..(c%2==0 and string.char(b) or caps(string.char(b)))
+   edit=edit:sub(1,cpos)..(c%2==0 and string.char(b) or caps(string.char(b)))..edit:sub(cpos+1,#edit)
+   cpos=cpos+1
   elseif b==13 then
    send()
   elseif b==8 then
-   edit=edit:sub(1,#edit-1)
+   edit=edit:sub(1,math.max(cpos-1,0))..edit:sub(cpos+1,#edit)
+   cpos=cpos-1
+   if cpos<0 then
+    cpos=0
+   end
+  elseif b==127 then
+   edit=edit:sub(1,cpos)..edit:sub(cpos+2,#edit)
   elseif b==9 then
    local txt,lw=edit:match"(.*%s)(%S+)"
    lw=lw or edit
@@ -376,6 +385,16 @@ local function key(a,b,c,d)
     if v:gsub("[@+]",""):sub(1,#lw):lower()==lw:lower() then
      edit=txt..v:gsub("[@+]","")
     end
+   end
+  elseif b==276 then
+   cpos=cpos-1
+   if cpos<0 then
+    cpos=0
+   end
+  elseif b==275 then
+   cpos=cpos+1
+   if cpos>#edit then
+    cpos=#edit
    end
   else
    return true
