@@ -1,0 +1,19 @@
+xsTPTIRC is an IRC client for The Powder Toy (http://powdertoy.co.uk)
+After loading the script, press Ctrl+M to open/hide window
+Ctrl+Shift+M will terminate the client.
+To join a channel type 
+ /join #channel
+To leave a channel type
+ /part #channel
+To open a PM with someone type
+ /open nickname
+To close PM type
+ /close nickname
+To clear text in window type
+ /clear windowname
+
+On first run client will create a configuration file,
+in which you can edit your default nick, server and port,
+also you can edit channels to be automatically joined upon connection.
+
+P.S: yeah, client misses lots of features, i know. Just wait some time and ill add them.
