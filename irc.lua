@@ -63,6 +63,10 @@ local function colortext(x,y,s)
  end
 end
 
+local function textwidth(s)
+ return tpt.textwidth(s:gsub("\v...",""))
+end
+
 local function r(t)
  return "\v"..string.char(unpack(t))
 end
@@ -92,7 +96,7 @@ tpt.drawrect(wx,wy,600,360,unpack(wcolor))
  -- Topic
  tpt.drawrect(wx,wy+12,484,12,unpack(wcolor))
  local f=#tabs[ctab].topic
- while tpt.textwidth(tabs[ctab].topic:sub(1,f))>480 do
+ while textwidth(tabs[ctab].topic:sub(1,f))>480 do
   f=f-1
  end
  drawtext(wx+2,wy+14,tabs[ctab].topic:sub(1,f),unpack(wcolor))
@@ -130,7 +134,10 @@ tpt.drawrect(wx,wy,600,360,unpack(wcolor))
  for i=1,math.min(#tabs[ctab].text,32) do
   colortext(wx+2,wy+348-i*10,r(textcolor)..tabs[ctab].text[i])
  end
- drawtext(wx+2,wy+351,edit:sub(1,cpos)..(math.floor(cursorbl/16)%2==1 and ".." or "_")..edit:sub(cpos+1,#edit),unpack(textcolor))
+ drawtext(wx+2,wy+351,edit,unpack(textcolor))
+ if math.floor(cursorbl/10)%2==1 then
+  tpt.fillrect(wx+2+textwidth(edit:sub(1,cpos)),wy+354,textwidth((edit:sub(cpos+1,cpos+1).." "):sub(1,1))+2,4,unpack(textcolor))
+ end
  cursorbl=cursorbl+1
 end
 
@@ -141,7 +148,7 @@ end
 local function wprint(n,s)
  while #s>0 do
   local f=#s
-  while tpt.textwidth(s:sub(1,f))>493 do
+  while textwidth(s:sub(1,f))>493 do
    f=f-1
   end
   table.insert(tabs[n].text,1,s:sub(1,f))
