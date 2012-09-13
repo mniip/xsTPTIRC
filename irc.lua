@@ -61,6 +61,8 @@ local ctab=1
 local edit=""
 local cpos=0
 local cursorbl=0
+local history={[0]=""}
+local histp=0
 
 local wx,wy=10,10
 local wcolor={255,255,0}
@@ -136,6 +138,8 @@ local function findtab(s)
 end
 
 local function send()
+ table.insert(history,1,edit)
+ cpos=0
  if edit:match"^/" then
   local command,params=edit:match"/(%S+)%s*(.*)"
   if command:lower()=="clear" then
@@ -396,6 +400,20 @@ local function key(a,b,c,d)
    if cpos>#edit then
     cpos=#edit
    end
+  elseif b==274 then
+   histp=histp-1
+   if cpos<0 then
+    cpos=0
+   end
+   edit=history[histp]
+   cpos=#edit
+  elseif b==273 then
+   histp=histp+1
+   if histp>#history then
+    histp=#history
+   end
+   edit=history[histp]
+   cpos=#edit
   else
    return true
   end
