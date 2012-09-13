@@ -30,7 +30,22 @@ local function loadpresets()
  local f=io.open"irc.conf"
  if not f then
   f=io.open("irc.conf","w")
-  f:write('nick="'..mynick..'"\nserver="irc.freenode.net"\nport=6667\nautojoin={"#powder-social"}')
+  f:write('nick="'..mynick..[[
+
+server="irc.freenode.net"
+port=6667
+autojoin={"#powder-social"}
+wcolor={255,255,0}
+tabtextcolor={255,255,255}
+ctabcolor={255,0,255,63}
+nickcolor={0,255,255}
+textcolor={127,255,255}
+opcolor={255,0,0}
+voicecolor={64,192,64}
+mycolor={255,255,255}
+mecolor={128,128,128}
+chancolor={255,127,0}
+]])
   f:close()
   f=io.open"irc.conf"
  end
@@ -80,14 +95,16 @@ local history={[0]=""}
 local histp=0
 
 local wx,wy=10,10
-local wcolor={255,255,0}
-local tabtextcolor={255,255,255}
-local ctabcolor={255,0,255,63}
-local nickcolor={0,255,255}
-local textcolor={127,255,255}
-local opcolor={255,0,0}
-local voicecolor={64,192,64}
-local mycolor={255,255,255}
+local wcolor=conf.wcolor or {255,255,0}
+local tabtextcolor=conf.tabtextcolor or {255,255,255}
+local ctabcolor=conf.ctabcolor or {255,0,255,63}
+local nickcolor=conf.nickcolor or {0,255,255}
+local textcolor=conf.textcolor or {127,255,255}
+local opcolor=conf.opcolor or {255,0,0}
+local voicecolor=conf.voicecolor or {64,192,64}
+local mycolor=conf.mycolor or {255,255,255}
+local mecolor=conf.mecolor or {128,128,128}
+local chancolor=conf.chancolor or {255,127,0}
 
 local function ui()
  tpt.fillrect(wx,wy,600,360,0,0,0,240)
@@ -147,12 +164,17 @@ end
 
 local function wprint(n,s)
  while #s>0 do
+  print(s)
   local f=#s
   while textwidth(s:sub(1,f))>493 do
    f=f-1
   end
   table.insert(tabs[n].text,1,s:sub(1,f))
-  s=s:sub(f+1)
+  if s:sub(1,f):find"\v" and f~=#s then
+   s=s:sub(1,f):match".*(\v...)"..s:sub(f+1)
+  else
+   s=s:sub(f+1)
+  end
  end
 end
 
@@ -188,7 +210,7 @@ local function send()
    c:send("PRIVMSG "..who.." :\1"..what.."\1\n")
   elseif command:lower()=="me" then
    c:send("PRIVMSG "..tabs[ctab].name.." :\1ACTION "..params.."\1\n")
-   wprint(ctab,"* "..mynick.." "..params)
+   wprint(ctab,r(mecolor).."* "..mynick.." "..params)
   else
    c:send(edit:match"/(.*)".."\n")
    wprint(ctab,">"..edit)
@@ -268,11 +290,11 @@ local function receive()
    if nick:lower()==mynick:lower() then
     table.insert(tabs,{name=channel,nicks={},topic="",text={}})
     ctab=#tabs
-    wprint(1,"*** You have joined "..channel)
+    wprint(1,r(chancolor).."*** You have joined "..channel)
    else
     table.insert(tabs[findtab(channel)or 1].nicks,nick)
    end
-   wprint(findtab(channel)or 1,"*** "..nick.." has joined "..channel)
+   wprint(findtab(channel)or 1,r(chancolor).."*** "..nick.." has joined "..channel)
    resortnicks(findtab(channel)or 1)
   elseif command=="376" then
    for _,v in ipairs(conf.autojoin) do
@@ -322,11 +344,11 @@ local function receive()
   elseif command=="332" then
    local channel,topic=params:match"%S+ (%S+) :(.*)"
    tabs[findtab(channel)or 1].topic=topic
-   wprint(findtab(channel)or 1,"*** Topic for "..channel.." is: ")
-   wprint(findtab(channel)or 1,topic)
+   wprint(findtab(channel)or 1,r(chancolor).."*** Topic for "..channel.." is: ")
+   wprint(findtab(channel)or 1,r(chancolor)..topic)
   elseif command=="333" then
    local channel,whom,when=params:match"%S+ (%S+) (%S+) (%S+)"
-   wprint(findtab(channel)or 1,"*** Topic set by "..whom.." at "..os.date("%c",when))
+   wprint(findtab(channel)or 1,r(chancolor).."*** Topic set by "..whom.." at "..os.date("%c",when))
   elseif command=="353" then
    local channel,nicks=params:match"%S+ = (%S+) :(.*)"
    for nick in nicks:gmatch"(%S+)" do
@@ -345,10 +367,10 @@ local function receive()
      break
     end
    end
-   wprint(findtab(channel)or 1,"*** "..nick.." has left "..channel)
+   wprint(findtab(channel)or 1,r(chancolor).."*** "..nick.." has left "..channel)
    if nick:lower()==mynick:lower() then
     table.remove(tabs,findtab(channel)or -1)
-    wprint(1,"*** You have left "..channel)
+    wprint(1,r(chancolor).."*** You have left "..channel)
    end
   elseif command:lower()=="quit" then
    local nick=sender:match"([^!]+)"
@@ -356,7 +378,7 @@ local function receive()
    for i,v in ipairs(tabs) do
     for j,n in ipairs(v.nicks) do
      if n:lower():gsub("[@+]","")==nick:lower() then
-      wprint(i,"*** "..nick.." has quit ("..reason..")")
+      wprint(i,r(chancolor).."*** "..nick.." has quit ("..reason..")")
       table.remove(v.nicks,j)
       break
      end
@@ -365,7 +387,7 @@ local function receive()
   elseif command:lower()=="mode" then
    local nick=sender:match"([^!]+)"
    local whom,modes=params:match"(%S+) (.*)"
-   wprint(findtab(whom)or 1,"*** "..nick.." sets modes for "..whom.." : "..modes)
+   wprint(findtab(whom)or 1,r(chancolor).."*** "..nick.." sets modes for "..whom.." : "..modes)
    if whom:match"#" then
     tabs[findtab(whom)or 1].nicks={}
     c:send("NAMES "..whom.."\n")
@@ -376,7 +398,7 @@ local function receive()
    for i,v in ipairs(tabs) do
     for j,n in ipairs(v.nicks) do
      if n:lower():gsub("[@+]","")==nick:lower() then
-      wprint(i,"*** "..nick.." has changed nick to "..newnick)
+      wprint(i,r(chancolor).."*** "..nick.." has changed nick to "..newnick)
       v.nicks[j]=n:gsub("[^@+]","")..newnick
       break
      end
