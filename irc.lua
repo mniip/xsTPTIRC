@@ -55,6 +55,17 @@ if not succ then
 end
 
 local drawtext=function(...)return pcall(tpt.drawtext,...)end
+local function colortext(x,y,s)
+ local ox=0
+ for r,g,b,t in s:gmatch"\v(.)(.)(.)([^\v]*)" do
+  drawtext(x+ox,y,t,r:byte(1),g:byte(1),b:byte(1))
+  ox=ox+tpt.textwidth(t)
+ end
+end
+
+local function r(t)
+ return "\v"..string.char(unpack(t))
+end
 
 local tabs
 local ctab=1
@@ -70,6 +81,9 @@ local tabtextcolor={255,255,255}
 local ctabcolor={255,0,255,63}
 local nickcolor={0,255,255}
 local textcolor={127,255,255}
+local opcolor={255,0,0}
+local voicecolor={64,192,64}
+local mycolor={255,255,255}
 
 local function ui()
  tpt.fillrect(wx,wy,600,360,0,0,0,240)
@@ -100,7 +114,13 @@ tpt.drawrect(wx,wy,600,360,unpack(wcolor))
  tpt.drawrect(wx+496,wy+12,104,336,unpack(wcolor))
  for i,v in ipairs(tabs[ctab].nicks) do
   if i<=33 then
-   drawtext(wx+498,wy+4+10*i,v,unpack(nickcolor))
+   if v:gsub("[^@+]","")=="@" then
+    drawtext(wx+498,wy+4+10*i,v,unpack(opcolor))
+   elseif v:gsub("[^@+]","")=="+" then
+    drawtext(wx+498,wy+4+10*i,v,unpack(voicecolor))
+   else
+    drawtext(wx+498,wy+4+10*i,v,unpack(nickcolor))
+   end
   end
  end
  tpt.drawrect(wx,wy+24,496,324,unpack(wcolor))
@@ -108,7 +128,7 @@ tpt.drawrect(wx,wy,600,360,unpack(wcolor))
  drawtext(wx+589,wy+351,">>",unpack(wcolor))
  -- Text
  for i=1,math.min(#tabs[ctab].text,32) do
-  drawtext(wx+2,wy+348-i*10,tabs[ctab].text[i],unpack(textcolor))
+  colortext(wx+2,wy+348-i*10,r(textcolor)..tabs[ctab].text[i])
  end
  drawtext(wx+2,wy+351,edit:sub(1,cpos)..(math.floor(cursorbl/16)%2==1 and ".." or "_")..edit:sub(cpos+1,#edit),unpack(textcolor))
  cursorbl=cursorbl+1
@@ -168,7 +188,7 @@ local function send()
   end
  else
   c:send("PRIVMSG "..tabs[ctab].name.." :"..edit.."\n")
-  wprint(ctab,"<"..mynick.."> "..edit)
+  wprint(ctab,r(mycolor).."<"..mynick.."> "..edit)
  end
  edit=""
 end
@@ -277,6 +297,15 @@ local function receive()
       table.insert(tabs,{name=nick,nicks={},topic="Query with "..nick,text={}})
      end
      channel=nick
+    end
+    for _,v in ipairs(tabs[ctab].nicks) do
+     if v:gsub("[@+]",""):lower()==nick:lower() then
+      if v:gsub("[^@+]","")=="@" then
+       nick=r(opcolor)..nick..r(textcolor)
+      elseif v:gsub("[^@+]","")=="+" then
+       nick=r(voicecolor)..nick..r(textcolor)
+      end
+     end
     end
     wprint(findtab(channel)or 1,"<"..nick.."> "..text)
    end
