@@ -210,6 +210,22 @@ local function send()
   elseif command:lower()=="me" then
    c:send("PRIVMSG "..tabs[ctab].name.." :\1ACTION "..params.."\1\n")
    wprint(ctab,r(mecolor).."* "..mynick.." "..params)
+  elseif command:lower()=="server" then
+   if c then
+    c:send"QUIT\n"
+    c:close()
+    c=nil
+   end
+   c=socket.tcp()
+   if params:find"%S" then
+    local server,port=params:match"(%S+)%s*(%S+)"
+    server=server or params
+    port=port or 6667
+    c:connect(server,port)
+   else
+    c:connect(conf.server,conf.port)
+   end
+   c:settimeout(0)
   else
    c:send(edit:match"/(.*)".."\n")
    wprint(ctab,">"..edit)
@@ -416,6 +432,7 @@ local function receive()
  else
   if e~="timeout" then
    wprint(ctab,"*** ERROR READING FROM SOCKET: "..e)
+   c=nil
   end
  end
 end
