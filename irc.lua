@@ -185,6 +185,16 @@ local function findtab(s)
  end
 end
 
+local function resetwindows()
+ tabs={{name="-server-",
+ nicks={},
+ topic=version,
+ text={"--- "..version.." ---","The idea becomes real","Line by line"}}}
+ ctab=1
+ edit=""
+ cpos=0
+end
+
 local function send()
  table.insert(history,1,edit)
  cpos=0
@@ -216,13 +226,7 @@ local function send()
     pcall(c.close,c)
     c=nil
    end
-   tabs={{name="-server-",
-   nicks={},
-   topic=version,
-   text={"--- "..version.." ---","The idea becomes real","Line by line"}}}
-   ctab=1
-   edit=""
-   cpos=0
+   resetwindows()
    c=socket.tcp()
    if params:find"%S" then
     local server,port=params:match"(%S+)%s+(%S+)"
@@ -529,13 +533,7 @@ end
 
 local function start()
  if not launched then
-  tabs={{name="-server-",
-  nicks={},
-  topic=version,
-  text={"--- "..version.." ---","The idea becomes real","Line by line"}}}
-  ctab=1
-  edit=""
-  cpos=0
+  resetwindows()
   c=socket.tcp()
   c:connect(conf.server,conf.port)
   c:settimeout(0)
