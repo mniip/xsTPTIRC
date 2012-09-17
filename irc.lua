@@ -30,8 +30,7 @@ local function loadpresets()
  local f=io.open"irc.conf"
  if not f then
   f=io.open("irc.conf","w")
-  f:write('nick="'..mynick..[[
-
+  f:write('nick="'..mynick..[["
 server="irc.freenode.net"
 port=6667
 autojoin={"#powder-social"}
@@ -274,7 +273,7 @@ local function resortnicks(n)
 end
 
 local function receive()
- local s=c:receive"*l"
+ local s,e=c:receive"*l"
  if s then
   s=s:gsub("\n","")
   local sender,command,params=s:match":(%S+) (%S+)%s*(.*)"
@@ -413,6 +412,10 @@ local function receive()
    wprint(ctab,"-- "..nick.." -- "..text)
   else
    wprint(1,s)
+  end
+ else
+  if e~="timeout" then
+   wprint(ctab,"*** ERROR READING FROM SOCKET: "..e)
   end
  end
 end
