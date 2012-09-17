@@ -212,16 +212,23 @@ local function send()
    wprint(ctab,r(mecolor).."* "..mynick.." "..params)
   elseif command:lower()=="server" then
    if c then
-    c:send"QUIT\n"
-    c:close()
+    pcall(c.send,c,"QUIT\n")
+    pcall(c.close,c)
     c=nil
    end
+   tabs={{name="-server-",
+   nicks={},
+   topic=version,
+   text={"--- "..version.." ---","The idea becomes real","Line by line"}}}
+   ctab=1
+   edit=""
+   cpos=0
    c=socket.tcp()
    if params:find"%S" then
-    local server,port=params:match"(%S+)%s*(%S+)"
+    local server,port=params:match"(%S+)%s+(%S+)"
     server=server or params
     port=port or 6667
-    c:connect(server,port)
+    c:connect(server,tonumber(port))
    else
     c:connect(conf.server,conf.port)
    end
