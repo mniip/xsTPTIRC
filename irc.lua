@@ -68,21 +68,16 @@ if not succ then
  error"could not find luasocket"
 end
 
-local drawtext=function(...)return pcall(tpt.drawtext,...)end
-local function colortext(x,y,s)
- local ox=0
- for r,g,b,t in s:gmatch"\v(.)(.)(.)([^\v]*)" do
-  drawtext(x+ox,y,t,r:byte(1),g:byte(1),b:byte(1))
-  ox=ox+tpt.textwidth(t)
- end
-end
+local drawtext=function(x,y,s,...)return pcall(tpt.drawtext,x,y,s:gsub("\15(.)(.)(.)",
+function(r,g,b)return "\15"..(r=="\0"and"\1"or r)..(g=="\0"and"\1"or g)..(b=="\0"and"\1"or b)
+end),...)end
 
 local function textwidth(s)
- return tpt.textwidth(s:gsub("\v...",""))
+ return select(2,pcall(tpt.textwidth,s))
 end
 
 local function r(t)
- return "\v"..string.char(unpack(t))
+ return "\15"..string.char(unpack(t))
 end
 
 local tabs
@@ -148,7 +143,7 @@ tpt.drawrect(wx,wy,600,360,unpack(wcolor))
  drawtext(wx+589,wy+351,">>",unpack(wcolor))
  -- Text
  for i=1,math.min(#tabs[ctab].text,32) do
-  colortext(wx+2,wy+348-i*10,r(textcolor)..tabs[ctab].text[i])
+  drawtext(wx+2,wy+348-i*10,r(textcolor)..tabs[ctab].text[i])
  end
  drawtext(wx+2,wy+351,edit,unpack(textcolor))
  if math.floor(cursorbl/10)%2==1 then
@@ -162,6 +157,8 @@ local function isinrect(x,y,xz,yz,w,h)
 end
 
 local function wprint(n,s)
+ local t={[0]="\1\1\1","\255\255\255","\1\1\128","\1\128\1","\255\1\1","\128\1\1","\128\1\128","\255\128\1","\255\255\1","\1\255\1","\1\128\128","\1\255\255"}
+ s=s:gsub("\3(%d%d?)",function(i)return t[tonumber(i)]and"\15"..t[tonumber(i)]or""end)
  while #s>0 do
   print(s)
   local f=#s
@@ -169,11 +166,7 @@ local function wprint(n,s)
    f=f-1
   end
   table.insert(tabs[n].text,1,s:sub(1,f))
-  if s:sub(1,f):find"\v" and f~=#s then
-   s=s:sub(1,f):match".*(\v...)"..s:sub(f+1)
-  else
-   s=s:sub(f+1)
-  end
+  s=s:sub(f+1)
  end
 end
 
