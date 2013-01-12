@@ -204,13 +204,13 @@ local function send()
    else
      tabs[ctab].text={}
    end
-  elseif command:lower()=="close" then
+  elseif command:lower()=="close" or command:lower()=="part" then
    if params~="" then
     table.remove(tabs,findtab(params)or tonumber(params) or 0)
    else
     table.remove(tabs,ctab)
    end
-  elseif command:lower()=="open" then
+  elseif command:lower()=="open" or command:lower()=="query" then
    table.insert(tabs,{name=params,nicks={},topic="",text={}})
   elseif command:lower()=="ctcp" then
    local who,what=params:match"(%S+)%s*(.*)"
@@ -339,7 +339,7 @@ local function receive()
      wprint(findtab(channel)or 1,"* "..nick.." "..params)
     else
      local ctcp={ping=function(p)return p end,time=function(p)return os.date"%c"end,version=function(p)return version end,userinfo=function(p)return "PING TIME VERSION USERINFO"end}
-     if ctcp[command:lower] then
+     if ctcp[command:lower()] then
       c:send("NOTICE "..nick.." :\1"..command.." "..ctcp[command:lower()](params).."\1\n")
      end
     end
@@ -455,7 +455,7 @@ end
 local function key(a,b,c,d)
  if d==1 then
   if b>31 and b<127 then
-   edit=edit:sub(1,cpos)..(c%2==0 and string.char(b) or caps(string.char(b)))..edit:sub(cpos+1,#edit)
+   edit=edit:sub(1,cpos)..(c%4==0 and string.char(b) or caps(string.char(b)))..edit:sub(cpos+1,#edit)
    cpos=cpos+1
   elseif b==13 then
    send()
@@ -552,9 +552,9 @@ end
 
 
 local function keyhandler(a,b,c,d)
- if d==1 and math.floor(c/64)%2==1 then
+ if d==1 and (math.floor(c/64)%2==1 or math.floor(c/128)%2==1) then
   if a=="m" then
-   if c%2==0 then
+   if c%4==0 then
     if visible then
      disappear()
     else
