@@ -64,12 +64,16 @@ end
 loadpresets()
 
 pcall(package.loadlib,"socket","luasocket.dll")
-local succ,socket=pcall(require,"socket")
-if not succ then
- error"could not find luasocket"
+
+local loader=package.loadlib("luasocket.dll","luaopen_socket_core")
+if loader then
+ loader()
+else
+ socket=require("socket")
 end
 
-local drawtext=function(x,y,s,...)return pcall(tpt.drawtext,x,y,s:gsub("\15(.)(.)(.)",
+
+local drawtext=function(x,y,s,...)return pcall(tpt.drawtext,x,y,tostring(s):gsub("\15(.)(.)(.)",
 function(r,g,b)return "\15"..(r=="\0"and"\1"or r)..(g=="\0"and"\1"or g)..(b=="\0"and"\1"or b)
 end),...)end
 
