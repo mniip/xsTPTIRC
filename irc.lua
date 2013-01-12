@@ -338,8 +338,10 @@ local function receive()
      end
      wprint(findtab(channel)or 1,"* "..nick.." "..params)
     else
-     ctcp=ctcp or setmetatable({ping=function(p)return p end,time=function(p)return os.date"%c"end,version=function(p)return version end,userinfo=function(p)return "PING TIME VERSION USERINFO"end},{__index=function(_,k)return function(p)return _G[k](p)()end end})
-     c:send("NOTICE "..nick.." :\1"..command.." "..ctcp[command:lower()](params).."\1\n")
+     local ctcp={ping=function(p)return p end,time=function(p)return os.date"%c"end,version=function(p)return version end,userinfo=function(p)return "PING TIME VERSION USERINFO"end}
+     if ctcp[command:lower] then
+      c:send("NOTICE "..nick.." :\1"..command.." "..ctcp[command:lower()](params).."\1\n")
+     end
     end
    else
     if channel:lower()==mynick:lower() then
