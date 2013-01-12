@@ -16,7 +16,7 @@
 -- ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- ************************************************************************
 
-version="xsTPTIRC v1.0 beta by mniip"
+version="xsTPTIRC v1.1 beta by mniip"
 
 local n=tpt.get_name()
 if not n or n=="" then
