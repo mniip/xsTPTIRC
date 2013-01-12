@@ -63,6 +63,7 @@ end
 
 loadpresets()
 
+pcall(package.loadlib,"socket","luasocket.dll")
 local succ,socket=pcall(require,"socket")
 if not succ then
  error"could not find luasocket"
