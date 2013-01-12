@@ -324,20 +324,17 @@ local function receive()
    local nick=sender:match"([^!]+)"
    if text:find"\1" then
     local command,params=text:match"\1(%S+)%s*(.*)\1"
-    if command:lower()=="ping" then
-     c:send("NOTICE "..nick.." :\1PING "..params.."\1\n")
-    elseif command:lower()=="time" then
-     c:send("NOTICE "..nick.." :\1TIME "..os.date"%c".."\1\n")
-    elseif command:lower()=="version" then
-     c:send("NOTICE "..nick.." :\1VERSION "..version.."\1\n")
-    elseif command:lower()=="action" then
-    if channel:lower()==mynick:lower() then
-     if not findtab(nick) then
-      table.insert(tabs,{name=nick,nicks={},topic="Query with "..nick,text={}})
-     end
+    if command:lower()=="action" then
+     if channel:lower()==mynick:lower() then
+      if not findtab(nick) then
+       table.insert(tabs,{name=nick,nicks={},topic="Query with "..nick,text={}})
+      end
      channel=nick
-    end
-    wprint(findtab(channel)or 1,"* "..nick.." "..params)
+     end
+     wprint(findtab(channel)or 1,"* "..nick.." "..params)
+    else
+     ctcp=ctcp or setmetatable({ping=function(p)return p end,time=function(p)return os.date"%c"end,version=function(p)return version end,userinfo=function(p)return "PING TIME VERSION USERINFO"end},{__index=function(_,k)return function(p)return _G[k](p)()end end})
+     c:send("NOTICE "..nick.." :\1"..command.." "..ctcp[command:lower()](params).."\1\n")
     end
    else
     if channel:lower()==mynick:lower() then
