@@ -567,8 +567,8 @@ local function keyhandler(a,b,c,d)
     disappear()
     stop()
    end
+   return false
   end
-  return false
  end
 end
 
